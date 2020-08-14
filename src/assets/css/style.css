@@ -1,0 +1,67 @@
+.mar-all {
+	margin: 10px;
+}
+
+.mar-right {
+	margin-right: 10px;
+}
+
+.mar-button {
+	margin-right: 30px;
+}
+
+.mar-bottom {
+	margin-bottom: 10px;
+}
+
+.mar-right {
+	margin-right: 10px;
+	border: 0px;
+}
+
+.header {
+	text-align: center;
+}
+
+.error {
+	color: #FF0000;
+}
+
+.compose {
+	border-radius: 24px;
+}
+
+.no-line {
+	border: 0px;
+}
+
+.txt-right {
+	text-align:	right;
+}
+
+.message:hover {
+    border-bottom: 4px solid transparent;
+    cursor: pointer;
+}
+
+.mar-bottom {
+	margin-bottom: 10px;
+}
+
+.mar-right {
+	margin-right: 25px;
+}
+
+body {
+	background-image: url('../img/theme1.jpeg');
+	background-size: cover;
+}
+
+#email, #email_message, #sent_message {
+	background-color: white;
+    opacity: 0.5;
+}
+
+.selected {
+	background-color: #fce8e6;
+}

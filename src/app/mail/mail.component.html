@@ -1,0 +1,65 @@
+<div id="wrapper" class="ng-scope">
+    <div class="gray-bg">
+        <div class="wrapper wrapper-content">
+        	<div ng-app="mailApp">
+                <div ng-controller="mailCtrl">
+                	<div class="row col-md-12 mar-all">
+                		<div class="col-md-2">
+                		</div>
+                		<div class="col-md-8">
+                		</div>
+                		<div class="col-md-2">
+                			<button class="btn btn-danger float-right" type="button" ng-click="logout();">Logout</button>
+                		</div>
+					</div>
+					<hr/>
+					<div class="row mar-all" ng-init="getUsers();">
+						<div class="col-md-2">
+							<button class="btn compose mar-bottom" type="button" ng-click="composeModelOpen();" id="compose"><i class="fas fa-plus-circle"></i> Compose</button>
+							<button class="btn compose mar-bottom mar-right" type="button" ng-click="getMessage();" id="inbox"><i class="fas fa-inbox"></i> Inbox</button>
+							<button class="btn compose mar-bottom" type="button" ng-click="sentMail();" id="sent"><i class="fas fa-paper-plane"></i> Sent</button>
+                		</div>
+                		<div class="col-md-10" id="email" ng-init="getMessage();">
+                		</div>
+                		<div class="col-md-10" id="email_message" style="display:none;">
+                		</div>
+                		<div class="col-md-10" id="sent_message" style="display:none;">
+                		</div>
+					</div>
+					
+					<div id="composeModal" class="modal" tabindex="-1" role="dialog">
+				        <div class="modal-dialog" role="document">
+				            <div class="modal-content">
+				                <div class="modal-header">
+				                    <h5 class="modal-title">New Message</h5>
+				                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				                        <span aria-hidden="true">&times;</span>
+				                    </button>
+				                </div>
+				                <div class="modal-body">
+									<form id="createBook" name="createBook">
+										<div class="form-group" [formGroup]="composeForm">
+											<select class="form-control" id="to" formControlName="to">
+											</select>
+										</div>
+
+										<div class="form-group" [formGroup]="composeForm">
+											<input class="form-control no-line" formControlName="subject" id="subject" placeholder="subject">
+										</div>
+
+										<div class="form-group" [formGroup]="composeForm">
+											<textarea class="form-control no-line" row="6" formControlName="body" id="body" placeholder="body"></textarea>
+										</div>
+
+										<button type="submit" class="btn btn-primary float-right" ng-click="compose();">Submit</button>
+										<button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-default float-right mar-right" ng-click="closeModel();">Close</button>
+									</form>
+				                </div>
+				            </div>
+				        </div>
+				    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
