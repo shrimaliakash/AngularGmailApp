@@ -57,11 +57,19 @@ body {
 	background-size: cover;
 }
 
-#email, #email_message, #sent_message {
+#email, #email_message, #sent_message, #trash_message {
 	background-color: white;
     opacity: 0.5;
 }
 
 .selected {
 	background-color: #fce8e6;
+}
+
+body {
+    background-color: #333333;
+}
+
+.mar-left {
+	margin-left: 50px;
 }

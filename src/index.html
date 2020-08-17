@@ -57,7 +57,6 @@
 
 			$scope.createUser = function (){
 				if($("#add_first_name").val() != '' && $("#add_last_name").val() != '' && $("#add_email").val() != '') {
-					$("#createUserModal").modal("hide");
 
 					var first_name = $("#add_first_name").val();
 					var last_name = $("#add_last_name").val();
@@ -70,6 +69,12 @@
 					};
 					var url = $scope.url+"create-user";
 					$http.post(url, data).then(function(response){
+						$("#createUserModal").modal("hide");
+						$("#add_email_error").css('display','none')
+						$("#add_first_name").val('');
+						$("#add_last_name").val('');
+						$("#add_email").val('');
+
 
 					});
 				} else {
@@ -155,19 +160,24 @@
 				$("#composeModal").modal("hide");
 			}
 
-			$scope.sentMail = function() {
-				$("#inbox").removeClass('selected');
+			$scope.sentMailCSS = function() {
+				$("#sent_message").html('');
 				$("#sent").addClass('selected');
-				$('#title').html('');
-				$("#email").css('opacity','0.5');
-				$("#email_message").css('opacity','0.5');
-				$("#sent_message").css('opacity','0.5');
-				var title = "Sent Mail";
-				var $title = $(title).appendTo('#title');
-				$compile($title)($scope);
+				$('#email_message').css('display','none');
 				$('#email').css('display','none');
 				$('#sent_message').css('display','inline');
-				$('#sent_message').html('');
+			}
+
+			$scope.sentMail = function() {
+				$("#sent_message").html('');
+				if($('button.compose.selected').attr('id') == "inbox") {
+					$("#inbox").removeClass('selected');
+					$scope.sentMailCSS();
+				} else if($('button.compose.selected').attr('id') == "trash") {
+					$("#trash").removeClass('selected');
+					$('#trash_message').css('display','none');
+					$scope.sentMailCSS();
+				}
 				$scope.new_mail = [];
 				var email = localStorage.getItem('email');
 				var url = $scope.url+"sent-message?email="+email;
@@ -180,9 +190,21 @@
 						angular.forEach($scope.new_mail, function (value, key) {
 							if(value != undefined && value != '') {
 								if(value.is_read == "N") {
+									var local_email = localStorage.getItem('email');
+									var from_address = value.from_address;
+									if(local_email == from_address) {
+										from_address = value.to_address;
+									}
 									var EmailHTMLNEW = '<div class="row message" ng-click="message_read(\''+value.id+'\');">';
 									EmailHTMLNEW += '<div class="col-md-4">';
-									EmailHTMLNEW += '<b>'+value.from_address+'</b>';
+									EmailHTMLNEW += '<div class="row">';
+									EmailHTMLNEW += '<div class="col-md-6">';
+									EmailHTMLNEW += from_address;
+									EmailHTMLNEW += '</div>';
+									EmailHTMLNEW += '<div class="col-md-6">';
+									EmailHTMLNEW += '<p id="message_count"></p>';
+									EmailHTMLNEW += '</div>';
+									EmailHTMLNEW += '</div>';
 									EmailHTMLNEW += '</div>';
 									EmailHTMLNEW += '<div class="col-md-6">';
 									EmailHTMLNEW += '<b>'+value.subject+' - '+value.message+'</b>';
@@ -193,9 +215,21 @@
 									EmailHTMLNEW += '</div>';
 									EmailHTMLNEW += '<hr/>';
 								} else {
+									var local_email = localStorage.getItem('email');
+									var from_address = value.from_address;
+									if(local_email == from_address) {
+										from_address = value.to_address;
+									}
 									var EmailHTMLNEW = '<div class="row message" ng-click="message_read(\''+value.id+'\');">';
 									EmailHTMLNEW += '<div class="col-md-4">';
-									EmailHTMLNEW += value.from_address;
+									EmailHTMLNEW += '<div class="row">';
+									EmailHTMLNEW += '<div class="col-md-6">';
+									EmailHTMLNEW += from_address;
+									EmailHTMLNEW += '</div>';
+									EmailHTMLNEW += '<div class="col-md-6">';
+									EmailHTMLNEW += '<p id="message_count"></p>';
+									EmailHTMLNEW += '</div>';
+									EmailHTMLNEW += '</div>';
 									EmailHTMLNEW += '</div>';
 									EmailHTMLNEW += '<div class="col-md-6">';
 									EmailHTMLNEW += value.subject+' - '+value.message;
@@ -218,12 +252,150 @@
 						var EmailHTMLNEW = "<h3>"+response.data.message+"</h3>";
 						var $email = $(EmailHTMLNEW).appendTo('#sent_message');
 						$compile($email)($scope);
+					}
+				});
+			}
+
+			function count(id) {
+				var url = $scope.url+"count-message/"+id;
+				$scope.count = [];
+				$http.get(url).then(function(response){
+					new_count = response.data.count;
+					if(new_count <= 1) {
 					} else {
-						var EmailHTMLNEW = "<h3>No Messages Found</h3>";
-						var $email = $(EmailHTMLNEW).appendTo('#sent_message');
+						$scope.count.push({"id":new_count});
+						angular.forEach($scope.count, function (value, key) {
+							var result_id = value.id;
+							var EmailHTMLNEW = "<p class='mar-left'>"+result_id+"</p>";
+							var $email = $(EmailHTMLNEW).appendTo('#message_count');
+							$compile($email)($scope);
+						});
+					}
+				});
+
+			}
+
+			$scope.trashMailCSS = function() {
+				$("#trash_message").html('');
+				$("#inbox").removeClass('selected');
+				$("#sent").removeClass('selected');
+				$("#trash").addClass('selected');
+				$('#email_message').css('display','none');
+				$('#sent_message').css('display','none');
+				$('#email').css('display','none');
+				$('#trash_message').css('display','inline');
+			}
+
+			$scope.trashMail = function() {
+				$("#trash_message").html('');
+				if($('button.compose.selected').attr('id') == "inbox") {
+					$scope.trashMailCSS();
+				} else if($('button.compose.selected').attr('id') == "sent") {
+					$scope.trashMailCSS();
+				}
+				$scope.trash_mail = [];
+				var url = $scope.url+"trash-message";
+				$http.get(url).then(function(response){
+					var trash_mail = response.data.data;
+					if(trash_mail != undefined && trash_mail != '') {
+						angular.forEach(trash_mail, function (value, key) {
+							$scope.trash_mail.push({"created_at":value.created_at,"from_address":value.from_address,"id":value.id,"is_read":value.is_read,"message":value.message,"message_id":value.message_id,"subject":value.subject,"to_address":value.to_address,"updated_at":value.updated_at});
+						});
+						angular.forEach($scope.trash_mail, function (value, key) {
+							if(value != undefined && value != '') {
+								if(value.is_read == "N") {
+									var counts = count(value.id);
+									var TrashEmailHTMLNEW = '<div class="row message" ng-click="message_read(\''+value.id+'\');">';
+									TrashEmailHTMLNEW += '<div class="col-md-4">';
+									TrashEmailHTMLNEW += '<div class="row">';
+									TrashEmailHTMLNEW += '<div class="col-md-6">';
+									TrashEmailHTMLNEW += '<b>'+from_address+'</b>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<div class="col-md-6">';
+									TrashEmailHTMLNEW += '<p id="message_count" class="'+value.id+'"></p>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<div class="col-md-6">';
+									TrashEmailHTMLNEW += '<b>'+value.subject+' - '+value.message+'</b>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<div class="col-md-2 txt-right date">';
+									TrashEmailHTMLNEW += '<b>'+convert(value.created_at)+'</b>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<hr/>';
+								} else {
+									var local_email = localStorage.getItem('email');
+									var from_address = value.from_address;
+									if(local_email == from_address) {
+										from_address = value.to_address;
+									}
+									var counts = count(value.id);
+									var TrashEmailHTMLNEW = '<div class="row message" ng-click="message_read(\''+value.id+'\');">';
+									TrashEmailHTMLNEW += '<div class="col-md-4">';
+									TrashEmailHTMLNEW += '<div class="row">';
+									TrashEmailHTMLNEW += '<div class="col-md-6">';
+									TrashEmailHTMLNEW += from_address;
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<div class="col-md-6">';
+									TrashEmailHTMLNEW += '<p id="message_count" class="'+value.id+'"></p>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<div class="col-md-6">';
+									TrashEmailHTMLNEW += value.subject+' - '+value.message;
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<div class="col-md-2 txt-right">';
+									TrashEmailHTMLNEW += convert(value.created_at);
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '</div>';
+									TrashEmailHTMLNEW += '<hr/>';
+								}
+								var $email = $(TrashEmailHTMLNEW).appendTo('#trash_message');
+								$compile($email)($scope);
+							} else {
+								var TrashEmailHTMLNEW = "<h3>No Messages Found</h3>";
+								var $email = $(TrashEmailHTMLNEW).appendTo('#trash_message');
+								$compile($email)($scope);
+							}
+						});
+					} else if(response.data.message != undefined && response.data.message != '') {
+						var TrashEmailHTMLNEW = "<h3>"+response.data.message+"</h3>";
+						var $email = $(TrashEmailHTMLNEW).appendTo('#trash_message');
 						$compile($email)($scope);
 					}
 				});
+			}
+
+			$scope.homeCSS = function (){
+				$('#email_message').css('display','none');
+				$('#email').css('display','none');
+				$("#sent_message").css('opacity','0.5');
+				$("#email_message").css('opacity','0.5');
+				$("#trash_message").css('opacity','0.5');
+				$("#email").css('opacity','0.5');
+				$scope.emails = [];
+			}
+
+			$scope.home = function (){
+				if($('button.compose.selected').attr('id') == "sent") {
+					$scope.homeCSS();
+					$("#sent_message").html('');
+					$('#sent_message').css('display','inline');
+					$scope.sentMail();
+				} else if($('button.compose.selected').attr('id') == "trash") {
+					$scope.homeCSS();
+					$('#sent_message').css('display','none');
+					$("#trash_message").html('');
+					$('#trash_message').css('display','inline');
+					$scope.trashMail();
+				} else {
+					$scope.homeCSS();
+					$('#sent_message').css('display','none');
+					$("#email").html('');
+					$('#email').css('display','inline');
+					$scope.getMessage();
+				}
 			}
 
 			$scope.message_read = function (id){
@@ -232,83 +404,106 @@
 				$("#sent_message").css('opacity','2.5');
 				$('#email_message').html('');
 				$('#email').css('display','none');
-				$('#email_message').css('display','inline');
 				$('#sent_message').css('display','none');
+				$('#trash_message').css('display','none');
+				$('#email_message').css('display','inline');
 				var url = $scope.url+"read-message/"+id;
 				$http.get(url).then(function(response){
 					$window.location.url = '/mail/'+id;
-					var created_at = response.data.data.created_at;
-					var from_address = response.data.data.from_address;
-					var id = response.data.data.id;
-					var message = response.data.data.message;
-					var subject = response.data.data.subject;
-					var EmailHTMLNEW = "<div class='row'>";
-					EmailHTMLNEW += "<div class='col-md-4'>";
-					EmailHTMLNEW += "<button class='mar-right' ng-click='home()' class='no-line'><i class='fas fa-arrow-left'></i></button>";
-					EmailHTMLNEW += '<button class="mar-right" ng-click="removeMessage(\''+id+'\');" class="no-line"><i class="fas fa-trash"></i></button>';
-					EmailHTMLNEW += "</div>";
-					EmailHTMLNEW += "</div>";
-					EmailHTMLNEW += "<hr/>";
-					EmailHTMLNEW += "<div class='row'>";
-					EmailHTMLNEW += "<div class='col-md-8'>";
-					EmailHTMLNEW += "<h3>"+subject+"</h3>";
-					EmailHTMLNEW += "</div>";
-					EmailHTMLNEW += "<div class='col-md-4'>";
-					EmailHTMLNEW += "<p class='txt-right'>"+readDate(created_at)+" ("+timeSince(created_at)+" ago)</p>";
-					EmailHTMLNEW += "</div>";
-					EmailHTMLNEW += "</div>";
-					EmailHTMLNEW += "<br/><br/>";
-					EmailHTMLNEW += "<b>"+from_address+"</b>";
-					EmailHTMLNEW += "<p>"+message+"</p>";
-					EmailHTMLNEW += "<br><br><br>";
-					EmailHTMLNEW += "<button class='btn compose mar-bottom mar-right' type='button' ng-click='reply();' id='inbox'><i class='fas fa-reply'></i> Reply</button>";
-					var $email = $(EmailHTMLNEW).appendTo('#email_message');
-					$compile($email)($scope);
+
+					var subject = response.data.data[0].subject;
+					var from_address = '';
+				 	var header = "<div class='row'>";
+				 	header += "<div class='col-md-4'>";
+					header += "<button class='mar-right' ng-click='home();' class='no-line'><i class='fas fa-arrow-left'></i></button>";
+					if($('button.compose.selected').attr('id') == "inbox") {
+						header += '<button class="mar-right" ng-click="removeMessage(\''+id+'\');" class="no-line"><i class="fas fa-trash"></i></button>';
+					} else if($('button.compose.selected').attr('id') == "sent") {
+						header += '<button class="mar-right" ng-click="removeMessage(\''+id+'\');" class="no-line"><i class="fas fa-trash"></i></button>';
+					} else {						
+						header += '<button class="mar-right" ng-click="removeTrashMessage(\''+id+'\');" class="no-line"><i class="fas fa-trash"></i></button>';
+					}
+					
+					header += "</div>";
+					header += "</div>";
+					header += "<hr/>";
+					header += "<div class='row'>";
+					header += "<div class='col-md-8'>";
+					header += "<h3 id='subject_read'>"+subject+"</h3>";
+					header += "</div>";	
+					header += "</div>";
+					header += "<br/><br/>";
+					var $header = $(header).appendTo('#email_message');
+					$compile($header)($scope);
+					var body = '';
+					angular.forEach(response.data.data, function (value, key) {
+						if(value != undefined && value != '') {
+							var local_email = localStorage.getItem('email');
+							from_address = value.from_address;
+							if(local_email == from_address) {
+								from_address = value.to_address;
+							}
+							var id = value.id;
+							var message = value.message;
+							var created_at = value.created_at;
+							body += "<div class='row'>";
+							body += "<div class='col-md-4'>";
+							body += "<b>"+from_address+"</b>";
+							body += "</div>";
+							body += "<div class='col-md-8'>";
+							body += "<p class='txt-right'>"+readDate(created_at)+" ("+timeSince(created_at)+" ago)</p>";
+							body += "</div>";
+							body += "</div>";
+							body += "<p>"+message+"</p>";
+							body += "<br><br>";
+						} else {
+
+						}				
+				 	});
+				 	var $header = $(body).appendTo('#email_message');
+				 	var Footer = "<br><br>";
+					Footer += "<div id='reply' style='display:none;'>";
+					Footer += "<input type='hidden' class='form-control no-line' id='id' value='"+id+"'>";
+					Footer += "<div class='form-group' [formGroup]='composeForm'>";
+					Footer += "<input class='form-control no-line' formControlName='to' id='to' placeholder='to' value='"+from_address+"'>";
+					Footer += "</div>";
+					Footer += "<div class='form-group' [formGroup]='composeForm'>";
+					Footer += "<textarea class='form-control no-line' row='6' formControlName='body_reply' id='body_reply' placeholder='body'></textarea>";
+					Footer += "</div>";
+					Footer += "</div>";
+					Footer += "<button class='btn compose mar-bottom mar-right' type='button' ng-click='reply();' id='reply_btn'><i class='fas fa-reply'></i> Reply</button>";
+					Footer += "<button class='btn btn-primary compose mar-bottom mar-right' type='button' ng-click='send();' id='send_btn' style='display:none;'><i class='fas fa-paper-plane'></i> Send</button>";
+					var $header = $(Footer).appendTo('#email_message');
+					$compile($header)($scope);
 				});
 			}
 
 			$scope.reply = function() {
-
+				$("#reply").css('display','inline');
+				$("#reply_btn").css('display','none');
+				$("#send_btn").css('display','inline');
 			}
 
+			$scope.send = function() {
+				var to = $("#to").val();
+				var from = localStorage.getItem('email');
+				var subject = $("#subject_read").val();
+				var body = $("#body_reply").val();
+				var id = $("#id").val();
 
-			function timeSince(date) {
-				var seconds = Math.ceil((new Date() - new Date(date)) / 1000);
-				var interval = seconds / 31536000;
-				if (interval > 1) {
-					return Math.ceil(interval) + " years";
-				}
-				interval = seconds / 2592000;
-				if (interval > 1) {
-					return Math.ceil(interval) + " months";
-				}
-				interval = seconds / 86400;
-				console.log(seconds);
-				console.log(interval);
-				if (interval > 1) {
-					return Math.ceil(interval) + " days";
-				}
-				interval = seconds / 3600;
-				if (interval > 1) {
-					return Math.ceil(interval) + " hours";
-				}
-				interval = seconds / 60;
-				if (interval > 1) {
-					return Math.ceil(interval) + " minutes";
-				}
-				return Math.ceil(seconds) + " seconds";
-			}
+				var data = {
+					'to':to,
+					'from':from,
+					'subject':subject,
+					'body':body
+				};
+				var url = $scope.url+"reply-message/"+id;
+				$http.post(url, data).then(function(response){
+					$("#email").html('');
+					$scope.emails = [];
+					$scope.getMessage();
 
-			$scope.home = function (){
-				$('#email_message').css('display','none');
-				$('#sent_message').css('display','none');
-				$("#email").html('');
-				$("#email").css('opacity','0.5');
-				$("#email_message").css('opacity','0.5');
-				$("#sent_message").css('opacity','0.5');
-				$('#email').css('display','inline');
-				$scope.emails = [];
-				$scope.getMessage();
+				});
 			}
 
 			$scope.getUsers = function (){
@@ -324,16 +519,35 @@
 			}
 
 
-			$scope.getMessage = function (){
+			$scope.getMessageCSS = function (){
 				$("#inbox").addClass('selected');
-				$("#sent").removeClass('selected');
-				$('#title').html('');
-				var title = "Inbox";
-				var $title = $(title).appendTo('#title');
-				$compile($title)($scope);
-				$('#email_message').css('display','none');
-				$('#sent_message').css('display','none');
 				$('#email').css('display','inline');
+			}
+
+			$scope.getMessage = function (){
+				$("#email").html('');
+				if($('button.compose.selected').attr('id') == "sent") {
+					$scope.getMessageCSS();
+					$('#sent').removeClass('selected');
+					$('#email_message').css('display','none');
+					$('#sent_message').css('display','none');
+				} else if($('button.compose.selected').attr('id') == "trash") {
+					$scope.getMessageCSS();
+					$('#trash').removeClass('selected');
+					$('#email_message').css('display','none');
+					$('#sent_message').css('display','none');
+					$('#trash_message').css('display','none');
+					$('#email').css('display','inline');
+				} else {
+					$scope.getMessageCSS();
+					$('#sent').removeClass('selected');
+					$('#trash').removeClass('selected');
+					$('#email_message').css('display','none');
+					$('#sent_message').css('display','none');
+					$('#trash_message').css('display','none');
+					$('#email').css('display','inline');
+				}
+
 				$scope.emails = [];
 				$("#email").html('');
 				var email = localStorage.getItem('email');
@@ -346,20 +560,25 @@
 					});
 					var $user = $(UserHTML).appendTo('#to');
 					$compile($user)($scope);
-					if(response.data.message == "Messages Not Found.") {
-						var EmailHTML = "<h3>No Messages Found</h3>";
-						var $email = $(EmailHTML).appendTo('#email');
-					} else {
-						var new_email = response.data.data;
+					var new_email = response.data.data;
+					if(new_email != undefined && new_email != '') {
 						angular.forEach(new_email, function (value, key) {
 							$scope.emails.push({"id": value.id, "from_address": value.from_address, "to_address": value.to_address, "subject": value.subject, "message": value.message, "is_read" : value.is_read, "created_at": value.created_at});
 						});
 						angular.forEach($scope.emails, function (value) {
 							if(value != undefined && value != '') {
 								if(value.is_read == "N") {
+									var counts = count(value.id);
 									var EmailHTML = '<div class="row message" ng-click="message_read(\''+value.id+'\');">';
 									EmailHTML += '<div class="col-md-4">';
+									EmailHTML += '<div class="row">';
+									EmailHTML += '<div class="col-md-6">';
 									EmailHTML += '<b>'+value.from_address+'</b>';
+									EmailHTML += '</div>';
+									EmailHTML += '<div class="col-md-6">';
+									EmailHTML += '<p id="message_count" class="'+value.id+'"></p>';
+									EmailHTML += '</div>';
+									EmailHTML += '</div>';
 									EmailHTML += '</div>';
 									EmailHTML += '<div class="col-md-6">';
 									EmailHTML += '<b>'+value.subject+' - '+value.message+'</b>';
@@ -370,9 +589,17 @@
 									EmailHTML += '</div>';
 									EmailHTML += '<hr/>';
 								} else {
+									var counts = count(value.id);
 									var EmailHTML = '<div class="row message" ng-click="message_read(\''+value.id+'\');">';
 									EmailHTML += '<div class="col-md-4">';
+									EmailHTML += '<div class="row">';
+									EmailHTML += '<div class="col-md-6">';
 									EmailHTML += value.from_address;
+									EmailHTML += '</div>';
+									EmailHTML += '<div class="col-md-6">';
+									EmailHTML += '<p id="message_count" class="'+value.id+'"></p>';
+									EmailHTML += '</div>';
+									EmailHTML += '</div>';
 									EmailHTML += '</div>';
 									EmailHTML += '<div class="col-md-6">';
 									EmailHTML += value.subject+' - '+value.message;
@@ -391,6 +618,10 @@
 								$compile($email)($scope);
 							}
 						});
+					} else if(response.data.message != undefined && response.data.message != '') {
+						var TrashEmailHTMLNEW = "<h3>"+response.data.message+"</h3>";
+						var $email = $(TrashEmailHTMLNEW).appendTo('#email');
+						$compile($email)($scope);
 					}
 				});
 			}
@@ -398,16 +629,76 @@
 			$scope.removeMessage = function (id){
 				var url = $scope.url+"remove-message/"+id;
 				$http.delete(url).then(function(response){
-					var book_details = response.data.data;
-					if(book_details != undefined && book_details != '') {
-						$('#email_message').css('display','none');
-						$('#sent_message').css('display','none');
-						$("#email").html('');
-						$('#email').css('display','inline');
+					var book_details = response.data.success;
+					if(book_details == true) {
 						$scope.emails = [];
-						$scope.getMessage();
+						if($('button.compose.selected').attr('id') == "trash") {
+							$scope.trashMail();
+							$("#trash_message").html('');
+							$scope.trashMailCSS();
+						} else if($('button.compose.selected').attr('id') == "inbox") {
+							$scope.getMessage();
+							$("#email").html('');
+							$scope.getMessageCSS();
+						} else if($('button.compose.selected').attr('id') == "sent") {
+							$scope.sentMail();
+							$("#sent_message").html('');
+							$scope.sentMailCSS();
+						}
+					} else {
+
 					}
 				});
+			}
+
+			$scope.removeTrashMessage = function (id){
+				var url = $scope.url+"remove-trash-message/"+id;
+				$http.delete(url).then(function(response){
+					var book_details = response.data.success;
+					if(book_details == true) {
+						$scope.emails = [];
+						if($('button.compose.selected').attr('id') == "trash") {
+							$scope.trashMail();
+							$("#trash_message").html('');
+							$scope.trashMailCSS();
+						} else if($('button.compose.selected').attr('id') == "inbox") {
+							$scope.getMessage();
+							$("#email").html('');
+							$scope.getMessageCSS();
+						} else if($('button.compose.selected').attr('id') == "sent") {
+							$scope.sentMail();
+							$("#sent_message").html('');
+							$scope.sentMailCSS();
+						}
+					} else {
+
+					}
+				});
+			}
+
+			function timeSince(date) {
+				var seconds = Math.ceil((new Date() - new Date(date)) / 1000);
+				var interval = seconds / 31536000;
+				if (interval > 1) {
+					return Math.ceil(interval) + " years";
+				}
+				interval = seconds / 2592000;
+				if (interval > 1) {
+					return Math.ceil(interval) + " months";
+				}
+				interval = seconds / 86400;
+				if (interval > 1) {
+					return Math.ceil(interval) + " days";
+				}
+				interval = seconds / 3600;
+				if (interval > 1) {
+					return Math.ceil(interval) + " hours";
+				}
+				interval = seconds / 60;
+				if (interval > 1) {
+					return Math.ceil(interval) + " minutes";
+				}
+				return Math.ceil(seconds) + " seconds";
 			}
 
 			function convert(str) {
@@ -469,7 +760,6 @@
 				var year = current_date.getFullYear();
 				result_date = month +' '+date+','+ year+', '+time;
 				return result_date;
-
 			}
 		});
 	</script>

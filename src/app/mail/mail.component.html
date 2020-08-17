@@ -17,13 +17,16 @@
 						<div class="col-md-2">
 							<button class="btn compose mar-bottom" type="button" ng-click="composeModelOpen();" id="compose"><i class="fas fa-plus-circle"></i> Compose</button>
 							<button class="btn compose mar-bottom mar-right" type="button" ng-click="getMessage();" id="inbox"><i class="fas fa-inbox"></i> Inbox</button>
-							<button class="btn compose mar-bottom" type="button" ng-click="sentMail();" id="sent"><i class="fas fa-paper-plane"></i> Sent</button>
+							<button class="btn compose mar-bottom mar-right" type="button" ng-click="sentMail();" id="sent"><i class="fas fa-paper-plane"></i> Sent</button>
+							<button class="btn compose mar-bottom mar-right" type="button" ng-click="trashMail();" id="trash"><i class="fas fa-trash"></i> Trash</button>
                 		</div>
                 		<div class="col-md-10" id="email" ng-init="getMessage();">
                 		</div>
                 		<div class="col-md-10" id="email_message" style="display:none;">
                 		</div>
                 		<div class="col-md-10" id="sent_message" style="display:none;">
+                		</div>
+                		<div class="col-md-10" id="trash_message" style="display:none;">
                 		</div>
 					</div>
 					
