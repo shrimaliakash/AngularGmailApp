@@ -22,7 +22,7 @@
 		app.controller('loginCtrl', function ($scope, $http, $compile, $filter, $location, $window, $interval) {
 
 			$scope.url = "http://localhost:3001/";
-			$scope.baseURL = "http://localhost:4200/book";
+			$scope.baseURL = "http://localhost:4200/mail";
 
 			$scope.login = function (){
 				if($("#email").val() == '' || $("#email").val() == undefined) {
